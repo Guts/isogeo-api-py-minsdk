@@ -17,14 +17,15 @@
 # ##################################
 
 # Standard library
-from os import environ
 import logging
+import unittest
+import urllib3
+from os import environ
 from pathlib import Path
 from random import sample
 from socket import gethostname
-from sys import exit, _getframe
-from time import gmtime, strftime
-import unittest
+from sys import _getframe, exit
+from time import gmtime, sleep, strftime
 
 # 3rd party
 from dotenv import load_dotenv
@@ -51,7 +52,8 @@ if Path("dev.env").exists():
 hostname = gethostname()
 
 # API access
-workgroup_test = environ.get("ISOGEO_WORKGROUP_TEST_UUID")
+METADATA_TEST_FIXTURE_UUID = environ.get("ISOGEO_FIXTURES_METADATA_COMPLETE")
+WORKGROUP_TEST_FIXTURE_UUID = environ.get("ISOGEO_WORKGROUP_TEST_UUID")
 
 # #############################################################################
 # ########## Helpers ###############
@@ -83,10 +85,10 @@ class TestKeywordsComplete(unittest.TestCase):
             exit()
         else:
             pass
-        logging.debug("Isogeo PySDK version: {0}".format(pysdk_version))
 
-        # class vars and attributes
-        cls.li_fixtures_to_delete = []
+        # ignore warnings related to the QA self-signed cert
+        if environ.get("ISOGEO_PLATFORM").lower() == "qa":
+            urllib3.disable_warnings()
 
         # API connection
         cls.isogeo = IsogeoSession(
@@ -101,6 +103,13 @@ class TestKeywordsComplete(unittest.TestCase):
             password=environ.get("ISOGEO_USER_PASSWORD"),
         )
 
+        # class vars and attributes
+        cls.li_fixtures_to_delete = []
+
+        cls.metadata_fixture_existing = cls.isogeo.metadata.get(
+            metadata_id=METADATA_TEST_FIXTURE_UUID
+        )
+
     def setUp(self):
         """Executed before each test."""
         # tests stuff
@@ -110,7 +119,7 @@ class TestKeywordsComplete(unittest.TestCase):
 
     def tearDown(self):
         """Executed after each test."""
-        pass
+        sleep(0.5)
 
     @classmethod
     def tearDownClass(cls):
@@ -174,11 +183,28 @@ class TestKeywordsComplete(unittest.TestCase):
         self.li_fixtures_to_delete.append(keyword_new_1_created)
 
     # -- GET --
+    def test_keywords_list_metadata(self):
+        """GET :resources/{metadata_uuid}/keywords/}"""
+        # retrieve metadata keywords from keywords api module
+        keywords_metadata = self.isogeo.keyword.metadata(
+            metadata_id=METADATA_TEST_FIXTURE_UUID
+        )
+        self.assertIsInstance(keywords_metadata, list)
+
+        # retrieve metadata keywords from metadata api module (shortut)
+        metadata_keywords = self.isogeo.metadata.keywords(
+            metadata=self.metadata_fixture_existing
+        )
+        self.assertIsInstance(metadata_keywords, list)
+
+        # compare both
+        self.assertEqual(keywords_metadata, metadata_keywords)
+
     def test_keywords_search_workgroup(self):
         """GET :groups/{workgroup_uuid}/keywords/search}"""
         # retrieve workgroup keywords
         wg_keywords = self.isogeo.keyword.workgroup(
-            workgroup_id=workgroup_test, caching=0
+            workgroup_id=WORKGROUP_TEST_FIXTURE_UUID, caching=0
         )
         # parse and test object loader
         for i in wg_keywords.results:
@@ -236,7 +262,7 @@ class TestKeywordsComplete(unittest.TestCase):
         thesaurus_keywords = self.isogeo.keyword.thesaurus(page_size=50, caching=0)
         # pick one randomly
         random_keyword = sample(thesaurus_keywords.results, 1)[0]
-        random_keyword = self.isogeo.keyword.keyword(random_keyword.get("_id"))
+        random_keyword = self.isogeo.keyword.get(random_keyword.get("_id"))
 
     # -- PUT/PATCH --
     # def test_keywords_update(self):
@@ -244,7 +270,7 @@ class TestKeywordsComplete(unittest.TestCase):
     #     # create a new keyword
     #     keyword_fixture = Keyword(name="{}".format(get_test_marker()))
     #     keyword_fixture = self.isogeo.keyword.create(
-    #         workgroup_id=workgroup_test, keyword=keyword_fixture, check_exists=0
+    #         workgroup_id=WORKGROUP_TEST_FIXTURE_UUID, keyword=keyword_fixture, check_exists=0
     #     )
 
     #     # modify local object
@@ -255,7 +281,7 @@ class TestKeywordsComplete(unittest.TestCase):
     #     keyword_fixture = self.isogeo.keyword.keyword_update(keyword_fixture)
 
     #     # check if the change is effective
-    #     keyword_fixture_updated = self.isogeo.keyword.keyword(
+    #     keyword_fixture_updated = self.isogeo.keyword.get(
     #         keyword_fixture.owner.get("_id"), keyword_fixture._id
     #     )
     #     self.assertEqual(
