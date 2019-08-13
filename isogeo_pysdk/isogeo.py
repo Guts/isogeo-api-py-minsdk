@@ -109,7 +109,7 @@ class Isogeo(OAuth2Session):
 
     # -- ATTRIBUTES -----------------------------------------------------------
     AUTH_MODES = {
-        "group": {"client_id": str, "client_secret": str},
+        "group": {"client_id": str, "client_secret": str, "auto_refresh_url": str},
         "user_legacy": {
             "client_id": str,
             "client_secret": str,

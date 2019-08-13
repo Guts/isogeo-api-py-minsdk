@@ -71,8 +71,10 @@ class TestAuthentication(unittest.TestCase):
             urllib3.disable_warnings()
 
         # API credentials settings
-        cls.client_id = environ.get("ISOGEO_API_USER_LEGACY_CLIENT_ID")
-        cls.client_secret = environ.get("ISOGEO_API_USER_LEGACY_CLIENT_SECRET")
+        cls.group_client_id = environ.get("ISOGEO_API_GROUP_CLIENT_ID")
+        cls.group_client_secret = environ.get("ISOGEO_API_GROUP_CLIENT_SECRET")
+        cls.legacy_client_id = environ.get("ISOGEO_API_USER_LEGACY_CLIENT_ID")
+        cls.legacy_client_secret = environ.get("ISOGEO_API_USER_LEGACY_CLIENT_SECRET")
 
     # standard methods
     def setUp(self):
@@ -103,14 +105,17 @@ class TestAuthentication(unittest.TestCase):
         """Bad API ID and secret."""
         with self.assertRaises(ValueError):
             isogeo = Isogeo(
-                client_id=self.client_id[:-2], client_secret=self.client_secret
+                client_id=self.legacy_client_id[:-2],
+                client_secret=self.legacy_client_secret,
             )
             isogeo.connect()
 
     def test_other_language(self):
         """Try to get other language."""
         isogeo = Isogeo(
-            client_id=self.client_id, client_secret=self.client_secret, lang="ES"
+            client_id=self.legacy_client_id,
+            client_secret=self.legacy_client_secret,
+            lang="ES",
         )
         # if other language passed the English is applied
         self.assertEqual(isogeo.lang, "en")
@@ -122,8 +127,8 @@ class TestAuthentication(unittest.TestCase):
         """Bad platform value."""
         with self.assertRaises(ValueError):
             isogeo = Isogeo(
-                client_id=self.client_id,
-                client_secret=self.client_secret,
+                client_id=self.legacy_client_id,
+                client_secret=self.legacy_client_secret,
                 platform="skynet",
             )
             del isogeo
@@ -132,8 +137,8 @@ class TestAuthentication(unittest.TestCase):
         """Bad auth mode value."""
         with self.assertRaises(ValueError):
             isogeo = Isogeo(
-                client_id=self.client_id,
-                client_secret=self.client_secret,
+                client_id=self.legacy_client_id,
+                client_secret=self.legacy_client_secret,
                 auth_mode="fingerprint",
             )
             del isogeo
@@ -142,8 +147,8 @@ class TestAuthentication(unittest.TestCase):
     def test_proxy(self):
         """Simulate proxy settings assignment."""
         isogeo = Isogeo(
-            client_id=self.client_id,
-            client_secret=self.client_secret,
+            client_id=self.legacy_client_id,
+            client_secret=self.legacy_client_secret,
             proxy={
                 "http": "http://proxy.localhost:8888",
                 "https": "http://proxy.localhost:8888",
@@ -157,19 +162,35 @@ class TestAuthentication(unittest.TestCase):
         """Bad proxy settings."""
         with self.assertRaises(TypeError):
             Isogeo(
-                client_id=self.client_id,
-                client_secret=self.client_secret,
+                client_id=self.legacy_client_id,
+                client_secret=self.legacy_client_secret,
                 proxy="this_is_my_string_proxy",
             )
+
+    def test_successed_auth_group_prod(self):
+        """When a search works, check the response structure."""
+        isogeo = Isogeo(
+            auth_mode="group",
+            client_id=self.group_client_id,
+            client_secret=self.group_client_secret,
+            auto_refresh_url="https://id.api.isogeo.com/oauth/token",
+            platform="prod",
+        )
+        isogeo.connect()
+        self.assertIsInstance(isogeo.token, dict)
+        self.assertEqual(len(isogeo.token), 4)
+
+        # close
+        isogeo.close()
 
     def test_successed_auth_legacy_prod(self):
         """When a search works, check the response structure."""
         isogeo = Isogeo(
             auth_mode="user_legacy",
-            client_id=self.client_id,
-            client_secret=self.client_secret,
-            auto_refresh_url="{}/oauth/token".format(environ.get("ISOGEO_ID_URL")),
-            platform="qa",
+            client_id=self.legacy_client_id,
+            client_secret=self.legacy_client_secret,
+            auto_refresh_url="https://id.api.isogeo.com/oauth/token",
+            platform="prod",
         )
         isogeo.connect(
             username=environ.get("ISOGEO_USER_NAME"),
@@ -185,8 +206,8 @@ class TestAuthentication(unittest.TestCase):
         """Try to connect to QA platform."""
         isogeo = Isogeo(
             auth_mode="user_legacy",
-            client_id=self.client_id,
-            client_secret=self.client_secret,
+            client_id=self.legacy_client_id,
+            client_secret=self.legacy_client_secret,
             auto_refresh_url="{}/oauth/token".format(environ.get("ISOGEO_ID_URL")),
             platform="qa",
         )
