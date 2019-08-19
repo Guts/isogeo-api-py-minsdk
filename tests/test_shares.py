@@ -18,7 +18,6 @@
 
 # Standard library
 import logging
-import urllib3
 import unittest
 from os import environ
 from pathlib import Path
@@ -28,12 +27,11 @@ from sys import _getframe, exit
 from time import gmtime, sleep, strftime
 
 # 3rd party
+import urllib3
 from dotenv import load_dotenv
 
-
 # module target
-from isogeo_pysdk import Isogeo, Share, Catalog
-
+from isogeo_pysdk import Isogeo, Share
 
 # #############################################################################
 # ######## Globals #################
@@ -95,11 +93,19 @@ class TestShares(unittest.TestCase):
             auto_refresh_url="{}/oauth/token".format(environ.get("ISOGEO_ID_URL")),
             platform=environ.get("ISOGEO_PLATFORM", "qa"),
         )
-        # getting a token
         cls.isogeo.connect(
             username=environ.get("ISOGEO_USER_NAME"),
             password=environ.get("ISOGEO_USER_PASSWORD"),
         )
+
+        cls.isogeo_as_group = Isogeo(
+            auth_mode="group",
+            client_id=environ.get("ISOGEO_API_GROUP_CLIENT_ID"),
+            client_secret=environ.get("ISOGEO_API_GROUP_CLIENT_SECRET"),
+            auto_refresh_url="{}/oauth/token".format(environ.get("ISOGEO_ID_URL")),
+            platform=environ.get("ISOGEO_PLATFORM", "qa"),
+        )
+        cls.isogeo_as_group.connect()
 
     def setUp(self):
         """Executed before each test."""
@@ -122,6 +128,7 @@ class TestShares(unittest.TestCase):
                 pass
         # close sessions
         cls.isogeo.close()
+        cls.isogeo_as_group.close()
 
     # -- TESTS ---------------------------------------------------------
 
@@ -219,6 +226,39 @@ class TestShares(unittest.TestCase):
     # self.li_fixtures_to_delete.append(share_new_1._id)
 
     # -- GET --
+    def test_shares_listing_as_app(self):
+        """GET :/shares}"""
+        # retrieve shares feeding the authenticated app
+        shares = self.isogeo_as_group.share.listing()
+        # parse and test object loader
+        for i in shares[:50]:
+            # load it
+            share = Share(**i)
+            # tests attributes structure
+            self.assertTrue(hasattr(share, "_created"))
+            self.assertTrue(hasattr(share, "_creator"))
+            self.assertTrue(hasattr(share, "_id"))
+            self.assertTrue(hasattr(share, "_modified"))
+            self.assertTrue(hasattr(share, "applications"))
+            self.assertTrue(hasattr(share, "catalogs"))
+            self.assertTrue(hasattr(share, "groups"))
+            self.assertTrue(hasattr(share, "name"))
+            self.assertTrue(hasattr(share, "rights"))
+            self.assertTrue(hasattr(share, "type"))
+            self.assertTrue(hasattr(share, "urlToken"))
+            # tests attributes value
+            self.assertEqual(share._created, i.get("_created"))
+            self.assertEqual(share._creator, i.get("_creator"))
+            self.assertEqual(share._id, i.get("_id"))
+            self.assertEqual(share._modified, i.get("_modified"))
+            self.assertEqual(share.applications, i.get("applications"))
+            self.assertEqual(share.catalogs, i.get("catalogs"))
+            self.assertEqual(share.groups, i.get("groups"))
+            self.assertEqual(share.name, i.get("name"))
+            self.assertEqual(share.rights, i.get("rights"))
+            self.assertEqual(share.type, i.get("type"))
+            self.assertEqual(share.urlToken, i.get("urlToken"))
+
     def test_shares_get_user(self):
         """GET :/shares}"""
         # retrieve workgroup shares
