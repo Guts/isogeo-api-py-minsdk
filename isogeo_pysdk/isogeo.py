@@ -21,7 +21,11 @@ import logging
 from sys import platform as opersys
 
 # 3rd party library
-from oauthlib.oauth2 import BackendApplicationClient, LegacyApplicationClient
+from oauthlib.oauth2 import (
+    BackendApplicationClient,
+    LegacyApplicationClient,
+    MobileApplicationClient,
+)
 from requests_oauthlib import OAuth2Session
 
 # modules
@@ -264,6 +268,8 @@ class Isogeo(OAuth2Session):
             self.client = LegacyApplicationClient(client_id=client_id)
         elif auth_mode == "group":
             self.client = BackendApplicationClient(client_id=client_id)
+        elif auth_mode == "user_public":
+            self.client = MobileApplicationClient(client_id=client_id)
         else:
             raise NotImplementedError(
                 "Mode {} is not implemented yet.".format(auth_mode)
@@ -327,6 +333,16 @@ class Isogeo(OAuth2Session):
                 client_secret=self.client_secret,
                 verify=self.ssl,
             )
+        elif self.auth_mode == "user_public":
+            # build an authorization URL
+            authorization_url, state = self.authorization_url(
+                "https://id.api.qa.isogeo.com/oauth/authorize",
+                state="GNklnpJXuTGbv9DBuVYv7FbBmuLAen",
+            )
+            print(authorization_url, state)
+            # get token
+            response = self.get(authorization_url, verify=0)
+            self.token_from_fragment(response.url)
 
     # -- PROPERTIES -----------------------------------------------------------
     @property
