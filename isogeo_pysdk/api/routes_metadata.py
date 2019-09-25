@@ -27,6 +27,7 @@ from isogeo_pysdk.utils import IsogeoUtils
 # other routes
 from .routes_event import ApiEvent
 from .routes_condition import ApiCondition
+from .routes_conformity import ApiConformity
 from .routes_feature_attributes import ApiFeatureAttribute
 from .routes_limitation import ApiLimitation
 from .routes_link import ApiLink
@@ -65,6 +66,7 @@ class ApiMetadata:
         # sub routes
         self.attributes = ApiFeatureAttribute(self.api_client)
         self.conditions = ApiCondition(self.api_client)
+        self.conformity = ApiConformity(self.api_client)
         self.events = ApiEvent(self.api_client)
         self.layers = ApiServiceLayer(self.api_client)
         self.limitations = ApiLimitation(self.api_client)
@@ -250,9 +252,9 @@ class ApiMetadata:
         else:
             pass
 
-        # URL builder
-        url_metadata_exists = "{}{}".format(
-            utils.get_request_base_url("resources"), resource_id
+        # request URL
+        url_metadata_exists = utils.get_request_base_url(
+            route="resources/{}".format(resource_id)
         )
 
         # request
@@ -267,7 +269,7 @@ class ApiMetadata:
         # checking response
         req_check = checker.check_api_response(req_metadata_exists)
         if isinstance(req_check, tuple):
-            return req_check
+            return False
 
         return True
 

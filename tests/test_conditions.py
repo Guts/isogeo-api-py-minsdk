@@ -161,7 +161,7 @@ class TestConditions(unittest.TestCase):
     def test_conditions_listing(self):
         """GET :metadata/{metadata_uuid}/conditions}"""
         # retrieve metadata conditions
-        metadata_conditions = self.isogeo.metadata.conditions.list(
+        metadata_conditions = self.isogeo.metadata.conditions.listing(
             self.fixture_metadata_existing._id
         )
         self.assertIsInstance(metadata_conditions, list)
@@ -173,7 +173,8 @@ class TestConditions(unittest.TestCase):
             self.assertTrue(hasattr(condition, "description"))
             self.assertTrue(hasattr(condition, "license"))
             # test attributes instances
-            self.assertIsInstance(condition.license, License)
+            if "license" in i:
+                self.assertIsInstance(condition.license, License)
             # tests attributes value
             self.assertEqual(condition._id, i.get("_id"))
             self.assertEqual(condition.description, i.get("description"))

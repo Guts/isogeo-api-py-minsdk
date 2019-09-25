@@ -57,7 +57,7 @@ class ApiApplication:
     def listing(
         self,
         workgroup_id: str = None,
-        include: list = ["_abilities"],
+        include: list = ("_abilities"),
         caching: bool = 1,
     ) -> list:
         """Get all applications which are accessible by the authenticated user OR applications for a workgroup.
@@ -121,7 +121,7 @@ class ApiApplication:
         return applications
 
     @ApiDecorators._check_bearer_validity
-    def application(
+    def get(
         self, application_id: str, include: list = ["_abilities", "groups"]
     ) -> Application:
         """Get details about a specific application.
@@ -178,7 +178,7 @@ class ApiApplication:
         if check_exists == 1:
             # retrieve workgroup applications
             if not self.api_client._applications_names:
-                self.applications(include=[])
+                self.listing(include=())
             # check
             if application.name in self.api_client._applications_names:
                 logger.debug(
@@ -412,20 +412,18 @@ class ApiApplication:
             For dev memory, there are two main cases:
 
             Case 1 - application with no groups associated yet:
-            - self.application(application_id=app_uuid, include=[]).groups[0] is None
-            - len(self.application(application_id=app_uuid, include=[]).groups) == 1
+            - self.get(application_id=app_uuid, include=[]).groups[0] is None
+            - len(self.get(application_id=app_uuid, include=[]).groups) == 1
 
             Case 2 - application with some groups already associated but without include:
-            - self.application(application_id=app_uuid, include=[]).groups[0] is None
-            - len(self.application(application_id=app_uuid, include=[]).groups) == 1
+            - self.get(application_id=app_uuid, include=[]).groups[0] is None
+            - len(self.get(application_id=app_uuid, include=[]).groups) == 1
         """
         if len(application.groups) and application.groups[0] is None:
             logger.debug(
                 "Application doesn't contain its included workgroups. Let's make a new request..."
             )
-            application = self.application(
-                application_id=application._id, include=["groups"]
-            )
+            application = self.get(application_id=application._id, include=["groups"])
         else:
             pass
 

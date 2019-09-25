@@ -15,6 +15,7 @@
 # Standard library
 import base64
 import json
+import locale
 import logging
 import math
 import quopri
@@ -23,6 +24,7 @@ import uuid
 from configparser import ConfigParser
 from datetime import datetime
 from pathlib import Path
+from sys import platform as opersys
 from urllib.parse import urlparse
 
 # 3rd party
@@ -30,6 +32,7 @@ import requests
 
 # modules
 from isogeo_pysdk.checker import IsogeoChecker
+from isogeo_pysdk.models import Metadata
 
 # ##############################################################################
 # ########## Globals ###############
@@ -133,6 +136,8 @@ class IsogeoUtils(object):
         },
     }
 
+    lang = "fr"
+
     def __init__(self, proxies: dict = dict()):
         """Instanciate IsogeoUtils module.
 
@@ -158,14 +163,9 @@ class IsogeoUtils(object):
         self.platform = platform
         if platform == "prod":
             self.ssl = True
-            logger.debug("Using production platform.")
         elif platform == "qa":
             self.ssl = False
-            logger.debug("Using Quality Assurance platform (reduced perfs).")
         else:
-            logging.error(
-                "Platform must be one of: {}".format(" | ".join(self.API_URLS.keys()))
-            )
             raise ValueError(
                 3,
                 "Platform must be one of: {}".format(" | ".join(self.API_URLS.keys())),
@@ -173,6 +173,9 @@ class IsogeoUtils(object):
         # set values
         self.api_url = self.API_URLS.get(platform)
         self.app_url = self.APP_URLS.get(platform)
+        self.csw_url = self.CSW_URLS.get(platform)
+        self.mng_url = self.MNG_URLS.get(platform)
+        self.oc_url = self.OC_URLS.get(platform)
 
         # method ending
         return (
@@ -184,6 +187,34 @@ class IsogeoUtils(object):
             self.OC_URLS.get(platform),
             self.ssl,
         )
+
+    @classmethod
+    def set_lang_and_locale(self, lang: str):
+        """Set requests language and the matching locale.
+
+        :param str lang: language code to set API localization ("en" or "fr"). Defaults to 'fr'.
+        """
+        lang = lang.lower()
+
+        # setting locale according to the language passed and depending on OS
+        try:
+            if opersys == "win32":
+                if lang.lower() == "fr":
+                    locale.setlocale(locale.LC_ALL, "french")
+                else:
+                    locale.setlocale(locale.LC_ALL, "english")
+            else:
+                if lang.lower() == "fr":
+                    locale.setlocale(locale.LC_ALL, str("fr_FR.utf8"))
+                else:
+                    locale.setlocale(locale.LC_ALL, str("en_GB.utf8"))
+        except locale.Error as e:
+            logger.error(
+                "Selected locale ({}) is not installed: {}".format(lang.lower(), e)
+            )
+        logger.debug("Locale set to: {}".format(locale.getlocale()))
+
+        self.lang = lang
 
     @classmethod
     def convert_octets(self, octets: int) -> str:
@@ -325,39 +356,37 @@ class IsogeoUtils(object):
         :param str route: route to format
         :param str prot: https [DEFAULT] or http
         """
-        return "{}://{}.isogeo.com/{}/".format(prot, self.api_url, route)
+        return "{}://{}.isogeo.com/{}/?_lang={}".format(
+            prot, self.api_url, route, self.lang
+        )
 
-    def get_edit_url(
-        self,
-        md_id: str = None,
-        md_type: str = None,
-        owner_id: str = None,
-        tab: str = "identification",
-    ) -> str:
-        """Constructs the edition URL of a metadata.
+    def get_edit_url(self, metadata: Metadata, tab: str = "identification") -> str:
+        """Returns the edition URL of a metadata.
 
-        :param str md_id: metadata/resource UUID
-        :param str owner_id: owner UUID
-        :param str tab: target tab in the web form
+        :param Metadata metadata: metadata
+        :param str tab: target tab in the web form. Optionnal. Defaults to 'identification'.
         """
         # checks inputs
-        if not checker.check_is_uuid(md_id) or not checker.check_is_uuid(owner_id):
-            raise ValueError("One of md_id or owner_id is not a correct UUID.")
-        else:
-            pass
-        if not checker.check_edit_tab(tab, md_type=md_type):
+        if not isinstance(metadata, Metadata):
+            raise TypeError(
+                "Method expects a metadata object, no {}".format(type(metadata))
+            )
+        if not checker.check_is_uuid(metadata._id):
+            raise ValueError(
+                "Metadata _id is not a correct UUID: {}".format(metadata._id)
+            )
+
+        # base edit URL
+        edit_url = metadata.admin_url(self.app_url)
+        # add tab
+        if not checker.check_edit_tab(tab, md_type=metadata.type):
             logger.warning(
                 "Tab '{}' is not a valid tab for the is type '{}' of metadata. "
-                "It'll be replaced by default value.".format(tab, md_type)
+                "It'll be replaced by default value.".format(tab, metadata.type)
             )
             tab = "identification"
         # construct URL
-        return (
-            "{}"
-            "/groups/{}"
-            "/resources/{}"
-            "/{}".format(self.APP_URLS.get(self.platform), owner_id, md_id, tab)
-        )
+        return edit_url + tab
 
     def get_view_url(self, webapp: str = "oc", **kwargs):
         """Constructs the view URL of a metadata.
@@ -443,7 +472,7 @@ class IsogeoUtils(object):
         :param url str: URL string to guess from
 
         :rtype: str
-        :returns: "prod" or "qa" or "unknown" 
+        :returns: "prod" or "qa" or "unknown"
 
         :Example:
 
@@ -749,31 +778,6 @@ class IsogeoUtils(object):
 
         # return the output
         return tags_as_dicts, query_as_dicts
-
-    # -- SHARES MANAGEMENT ----------------------------------------------------
-    def share_extender(self, share: dict, results_filtered: dict):
-        """Extend share model with additional informations.
-
-        :param dict share: share returned by API
-        :param dict results_filtered: filtered search result
-        """
-        # add share administration URL
-        creator_id = share.get("_creator").get("_tag")[6:]
-        share["admin_url"] = "{}/groups/{}/admin/shares/{}".format(
-            self.app_url, creator_id, share.get("_id")
-        )
-        # check if OpenCatalog is activated
-        opencat_url = "{}/s/{}/{}".format(
-            self.oc_url, share.get("_id"), share.get("urlToken")
-        )
-        if requests.head(opencat_url):
-            share["oc_url"] = opencat_url
-        else:
-            pass
-        # add metadata ids list
-        share["mds_ids"] = (i.get("_id") for i in results_filtered)
-
-        return share
 
     # -- API AUTH ------------------------------------------------------------
     @classmethod
