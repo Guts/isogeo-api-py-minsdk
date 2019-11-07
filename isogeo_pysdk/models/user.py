@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-#! python3
+#! python3  # noqa E265
 
 """
     Isogeo API v1 - Model of User entity
@@ -24,50 +24,44 @@ from isogeo_pysdk.models.contact import Contact
 class User(object):
     """Users in Isogeo platform.
 
-    Sample:
+    :Example:
 
-    ```json
-    {
-        "_abilities": [
-            "string"
-        ],
-        "_created": "string (date-time)",
-        "_id": "string (uuid)",
-        "_modified": "string (date-time)",
-        "contact": {
+    .. code-block:: json
+
+        {
+            "_abilities": [
+                "string"
+            ],
             "_created": "string (date-time)",
             "_id": "string (uuid)",
             "_modified": "string (date-time)",
-            "addressLine1": "string",
-            "addressLine2": "string",
-            "addressLine3": "string",
-            "available": "string",
-            "city": "string",
-            "count": "integer (int32)",
-            "countryCode": "string",
-            "email": "string",
-            "fax": "string",
-            "hash": "string",
-            "name": "string",
-            "organization": "string",
-            "phone": "string",
-            "type": "string",
-            "zipCode": "string"
-        },
-        "language": "string",
-        "staff": "boolean",
-        "timezone": "string"
+            "contact": {
+                "_created": "string (date-time)",
+                "_id": "string (uuid)",
+                "_modified": "string (date-time)",
+                "addressLine1": "string",
+                "addressLine2": "string",
+                "addressLine3": "string",
+                "available": "string",
+                "city": "string",
+                "count": "integer (int32)",
+                "countryCode": "string",
+                "email": "string",
+                "fax": "string",
+                "hash": "string",
+                "name": "string",
+                "organization": "string",
+                "phone": "string",
+                "type": "string",
+                "zipCode": "string"
+            },
+            "language": "string",
+            "staff": "boolean",
+            "timezone": "string"
         }
-    ```
     """
 
-    """
-    Attributes:
-      attr_types (dict): basic structure of user attributes. {"attribute name": "attribute type"}.
-      attr_crea (dict): only attributes used to POST requests. {"attribute name": "attribute type"}
-      attr_map (dict): mapping between read and write attributes. {"attribute name - GET": "attribute type - POST"}
-    """
-    attr_types = {
+    ATTR_TYPES = {
         "_abilities": list,
         "_created": str,
         "_id": str,
@@ -79,7 +73,7 @@ class User(object):
         "timezone": str,
     }
 
-    attr_crea = {
+    ATTR_CREA = {
         # "contact": Contact,
         "language": str,
         "mailchimp": str,
@@ -87,7 +81,7 @@ class User(object):
         "timezone": str,
     }
 
-    attr_map = {
+    ATTR_MAP = {
         # "staff": "IsOgeo"
     }
 
@@ -104,7 +98,7 @@ class User(object):
         staff: bool = None,
         timezone: str = None,
     ):
-        """User model"""
+        """User model."""
 
         # default values for the object attributes/properties
         self.__abilities = None
@@ -143,8 +137,7 @@ class User(object):
     # abilities
     @property
     def _abilities(self):
-        """Gets the abilities of this User.  # noqa: E501
-
+        """Gets the abilities of this User.  # noqa: E501.
 
         :return: The abilities of this User.  # noqa: E501
         :rtype: Abilities
@@ -281,10 +274,10 @@ class User(object):
 
     # -- METHODS -----------------------------------------------------------------------
     def to_dict(self) -> dict:
-        """Returns the model properties as a dict"""
+        """Returns the model properties as a dict."""
         result = {}
 
-        for attr, _ in self.attr_types.items():
+        for attr, _ in self.ATTR_TYPES.items():
             value = getattr(self, attr)
             if isinstance(value, list):
                 result[attr] = list(
@@ -313,12 +306,12 @@ class User(object):
         """Returns the model properties as a dict structured for creation purpose (POST)"""
         result = {}
 
-        for attr, _ in self.attr_crea.items():
+        for attr, _ in self.ATTR_CREA.items():
             # get attribute value
             value = getattr(self, attr)
             # switch attribute name for creation purpose
-            if attr in self.attr_map:
-                attr = self.attr_map.get(attr)
+            if attr in self.ATTR_MAP:
+                attr = self.ATTR_MAP.get(attr)
             if isinstance(value, list):
                 result[attr] = list(
                     map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
@@ -343,7 +336,7 @@ class User(object):
         return result
 
     def to_str(self) -> str:
-        """Returns the string representation of the model"""
+        """Returns the string representation of the model."""
         return pprint.pformat(self.to_dict())
 
     def __repr__(self) -> str:
@@ -351,14 +344,14 @@ class User(object):
         return self.to_str()
 
     def __eq__(self, other) -> bool:
-        """Returns true if both objects are equal"""
+        """Returns true if both objects are equal."""
         if not isinstance(other, User):
             return False
 
         return self.__dict__ == other.__dict__
 
     def __ne__(self, other) -> bool:
-        """Returns true if both objects are not equal"""
+        """Returns true if both objects are not equal."""
         return not self == other
 
 
@@ -366,6 +359,6 @@ class User(object):
 # ##### Stand alone program ########
 # ##################################
 if __name__ == "__main__":
-    """ standalone execution """
+    """standalone execution."""
     obj = User()
     print(obj)

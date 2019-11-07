@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-#! python3
+#! python3  # noqa E265
 
 """
     Isogeo API v1 - Model of Catalog entity
@@ -24,59 +24,53 @@ from isogeo_pysdk.models.workgroup import Workgroup
 class Catalog(object):
     """Catalogs are entities used to organize and shares metadata of a workgroup.
 
+    :Example:
 
-    Sample:
+    .. code-block:: json
 
-    ```json
-    {
-        '$scan': False,
-        '_abilities': ['catalog:share'],
-        '_created': '2018-04-16T08:19:52.7008403+00:00',
-        '_id': 'aba3020305f04babaefe8c0719a612b3',
-        '_modified': '2018-10-08T12:53:30.4629329+00:00',
-        '_tag': 'catalog:aba3020305f04babaefe8c0719a612b3',
-        'code': 'new',
-        'count': 44,
-        'name': '_Démonstration',
-        'owner': {
-            '_created': '2014-04-18T16:23:38.617093+00:00',
-            '_id': '08b3054757544463abd06f3ab51ee491',
-            '_modified': '2018-11-29T07:37:22.0319922+00:00',
-            '_tag': 'owner:08b3054757544463abd06f3ab51ee491',
-            'areKeywordsRestricted': False,
-            'canCreateLegacyServiceLinks': True,
-            'canCreateMetadata': True,
-            'contact': {
-                '_deleted': False,
-                '_id': '80aabc302fe946c8a51fffe22d60eb77',
-                '_tag': 'contact:group:80aabc302fe946c8a51fffe22d60eb77',
-                'addressLine1': '26 rue du faubourg Saint-Antoine',
-                'addressLine2': '4ème étage',
-                'available': False,
-                'city': 'Paris',
-                'countryCode': 'FR',
-                'email': 'contact@isogeo.com',
-                'fax': '+33 9 81 40 00 66',
-                'name': 'Isogeo Demo',
-                'phone': '+33 9 67 46 50 06',
-                'type': 'group',
-                'zipCode': '75012'
-                },
-            'hasCswClient': False,
-            'hasScanFme': True,
-            'keywordsCasing': 'lowercase',
-            'metadataLanguage': 'fr'
-            }
-    }
-    ```
+        {
+            '$scan': boolean,
+            '_abilities': array,
+            '_created': string (datetime),
+            '_id': string (uuid),
+            '_modified': string (datetime),
+            '_tag': string,
+            'code': string,
+            'count': integer,
+            'name': string,
+            'owner': {
+                '_created': string (datetime),
+                '_id': string (uuid),
+                '_modified': string (datetime),
+                '_tag': string,
+                'areKeywordsRestricted': boolean,
+                'canCreateLegacyServiceLinks': boolean,
+                'canCreateMetadata': boolean,
+                'contact': {
+                    '_deleted': boolean,
+                    '_id': string (uuid),
+                    '_tag': string,
+                    'addressLine1': string,
+                    'addressLine2': string,
+                    'available': boolean,
+                    'city': string,
+                    'countryCode': string,
+                    'email': string (email),
+                    'fax': string,
+                    'name': string,
+                    'phone': string,
+                    'type': string,
+                    'zipCode': string
+                    },
+                'hasCswClient': boolean,
+                'hasScanFme': boolean,
+                'keywordsCasing': string,
+                'metadataLanguage': string
+                }
+        }
     """
 
-    """
-    Attributes:
-      attr_types (dict): basic structure of catalog attributes. {"attribute name": "attribute type"}.
-      attr_crea (dict): only attributes used to POST requests. {"attribute name": "attribute type"}
-    """
-    attr_types = {
+    ATTR_TYPES = {
         "_abilities": list,
         "_created": str,
         "_id": str,
@@ -89,9 +83,19 @@ class Catalog(object):
         "scan": bool,
     }
 
-    attr_crea = {"code": str, "name": str, "scan": bool}
+    ATTR_CREA = {"code": str, "name": str, "scan": bool}
 
-    attr_map = {"scan": "$scan"}
+    ATTR_MAP = {"scan": "$scan"}
+
+    @classmethod
+    def clean_attributes(cls, raw_object: dict):
+        """Renames attributes wich are incompatible with Python (hyphens...).
+
+        See related issue: https://github.com/isogeo/isogeo-api-py-minsdk/issues/82
+        """
+        for k, v in cls.ATTR_MAP.items():
+            raw_object[k] = raw_object.pop(v, [])
+        return cls(**raw_object)
 
     def __init__(
         self,
@@ -106,7 +110,7 @@ class Catalog(object):
         owner: Workgroup = None,
         scan: bool = None,
     ):
-        """Catalog model"""
+        """Catalog model."""
 
         # default values for the object attributes/properties
         self.__abilities = None
@@ -254,8 +258,7 @@ class Catalog(object):
 
     @property
     def owner(self):
-        """Gets the owner of this Catalog.  # noqa: E501
-
+        """Gets the owner of this Catalog.  # noqa: E501.
 
         :return: The owner of this Catalog.  # noqa: E501
         :rtype: Workgroup
@@ -283,10 +286,10 @@ class Catalog(object):
 
     # -- METHODS -----------------------------------------------------------------------
     def to_dict(self) -> dict:
-        """Returns the model properties as a dict"""
+        """Returns the model properties as a dict."""
         result = {}
 
-        for attr, _ in self.attr_types.items():
+        for attr, _ in self.ATTR_TYPES.items():
             value = getattr(self, attr)
             if isinstance(value, list):
                 result[attr] = list(
@@ -315,12 +318,12 @@ class Catalog(object):
         """Returns the model properties as a dict structured for creation purpose (POST)"""
         result = {}
 
-        for attr, _ in self.attr_crea.items():
+        for attr, _ in self.ATTR_CREA.items():
             # get attribute value
             value = getattr(self, attr)
             # switch attribute name for creation purpose
-            if attr in self.attr_map:
-                attr = self.attr_map.get(attr)
+            if attr in self.ATTR_MAP:
+                attr = self.ATTR_MAP.get(attr)
             # process value depending on attr type
             if isinstance(value, list):
 
@@ -347,7 +350,7 @@ class Catalog(object):
         return result
 
     def to_str(self) -> str:
-        """Returns the string representation of the model"""
+        """Returns the string representation of the model."""
         return pprint.pformat(self.to_dict())
 
     def __repr__(self) -> str:
@@ -355,14 +358,14 @@ class Catalog(object):
         return self.to_str()
 
     def __eq__(self, other) -> bool:
-        """Returns true if both objects are equal"""
+        """Returns true if both objects are equal."""
         if not isinstance(other, Catalog):
             return False
 
         return self.__dict__ == other.__dict__
 
     def __ne__(self, other) -> bool:
-        """Returns true if both objects are not equal"""
+        """Returns true if both objects are not equal."""
         return not self == other
 
 
@@ -370,7 +373,7 @@ class Catalog(object):
 # ##### Stand alone program ########
 # ##################################
 if __name__ == "__main__":
-    """ standalone execution """
+    """standalone execution."""
     cat = Catalog(name="youpi", scan=1)
     to_crea = cat.to_dict_creation()
     print(type(to_crea.get("IsScanSink")))

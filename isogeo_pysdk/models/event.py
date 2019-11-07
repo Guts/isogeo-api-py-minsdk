@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-#! python3
+#! python3  # noqa E265
 
 """
     Isogeo API v1 - Model of Event entity
@@ -13,10 +13,10 @@
 
 # standard library
 import pprint
-from datetime import datetime
 
 # submodules
 from isogeo_pysdk.enums import EventKinds
+
 
 # #############################################################################
 # ########## Classes ###############
@@ -24,25 +24,19 @@ from isogeo_pysdk.enums import EventKinds
 class Event(object):
     """Events are entities included as subresource into metadata for data history description.
 
+    :Example:
 
-    Sample:
+    .. code-block:: json
 
-    ```json
-    {
-        '_id': string (uuid),
-        'date': string (datetime),
-        'description': string,
-        'kind': string
-    }
-    ```
+        {
+            '_id': string (uuid),
+            'date': string (datetime),
+            'description': string,
+            'kind': string
+        }
     """
 
-    """
-    Attributes:
-      attr_types (dict): basic structure of event attributes. {"attribute name": "attribute type"}.
-      attr_crea (dict): only attributes used to POST requests. {"attribute name": "attribute type"}
-    """
-    attr_types = {
+    ATTR_TYPES = {
         "_id": str,
         "date": str,
         "description": str,
@@ -50,9 +44,9 @@ class Event(object):
         "parent_resource": str,
     }
 
-    attr_crea = {"date": str, "description": str, "kind": str, "waitForSync": bool}
+    ATTR_CREA = {"date": str, "description": str, "kind": str, "waitForSync": bool}
 
-    attr_map = {}
+    ATTR_MAP = {}
 
     def __init__(
         self,
@@ -63,7 +57,7 @@ class Event(object):
         parent_resource: str = None,
         waitForSync: bool = 1,
     ):
-        """Event model"""
+        """Event model."""
 
         # default values for the object attributes/properties
         self.__id = None
@@ -157,7 +151,6 @@ class Event(object):
         - creation
         - publication
         - update
-
         """
 
         # check type value
@@ -172,10 +165,10 @@ class Event(object):
 
     # -- METHODS -----------------------------------------------------------------------
     def to_dict(self) -> dict:
-        """Returns the model properties as a dict"""
+        """Returns the model properties as a dict."""
         result = {}
 
-        for attr, _ in self.attr_types.items():
+        for attr, _ in self.ATTR_TYPES.items():
             value = getattr(self, attr)
             if isinstance(value, list):
                 result[attr] = list(
@@ -204,12 +197,12 @@ class Event(object):
         """Returns the model properties as a dict structured for creation purpose (POST)"""
         result = {}
 
-        for attr, _ in self.attr_crea.items():
+        for attr, _ in self.ATTR_CREA.items():
             # get attribute value
             value = getattr(self, attr)
             # switch attribute name for creation purpose
-            if attr in self.attr_map:
-                attr = self.attr_map.get(attr)
+            if attr in self.ATTR_MAP:
+                attr = self.ATTR_MAP.get(attr)
             if isinstance(value, list):
                 result[attr] = list(
                     map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
@@ -234,7 +227,7 @@ class Event(object):
         return result
 
     def to_str(self) -> str:
-        """Returns the string representation of the model"""
+        """Returns the string representation of the model."""
         return pprint.pformat(self.to_dict())
 
     def __repr__(self) -> str:
@@ -242,14 +235,14 @@ class Event(object):
         return self.to_str()
 
     def __eq__(self, other) -> bool:
-        """Returns true if both objects are equal"""
+        """Returns true if both objects are equal."""
         if not isinstance(other, Event):
             return False
 
         return self.__dict__ == other.__dict__
 
     def __ne__(self, other) -> bool:
-        """Returns true if both objects are not equal"""
+        """Returns true if both objects are not equal."""
         return not self == other
 
 
@@ -257,5 +250,5 @@ class Event(object):
 # ##### Stand alone program ########
 # ##################################
 if __name__ == "__main__":
-    """ standalone execution """
+    """standalone execution."""
     ct = Event()
