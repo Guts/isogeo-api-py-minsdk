@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-#! python3
+#! python3  # noqa E265
 
 # ------------------------------------------------------------------------------
 # Name:         Isogeo sample - Remove custom specifications from metadatas of a workgroup
@@ -13,7 +13,6 @@
 # ##################################
 
 # Standard library
-import threading
 from concurrent.futures import ThreadPoolExecutor
 from os import environ
 from timeit import default_timer
@@ -37,7 +36,7 @@ WG_TEST_UUID = ""
 # ######## Export functions ###########
 # ###########################################################################
 def _meta_dissociate_specification(metadata: Metadata):
-    """Meta function"""
+    """Meta function."""
     # parse metadata specifications
     for s in metadata.specifications:
         spec = Specification(**s.get("specification"))
@@ -69,7 +68,6 @@ def threaded_executor(li_metadatas_with_specifications: list):
 # ##### Stand alone program ########
 # ##################################
 if __name__ == "__main__":
-    import pprint
     import urllib3
 
     # chronometer

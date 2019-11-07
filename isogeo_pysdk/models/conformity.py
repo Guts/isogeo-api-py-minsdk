@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-#! python3
+#! python3  # noqa E265
 
 """
     Isogeo API v1 - Model of Conformity entity
@@ -22,8 +22,8 @@ from isogeo_pysdk.models import Specification
 # ########## Classes ###############
 # ##################################
 class Conformity(object):
-    """Conformity is an entity defining if a data respects a specification. It's a quality indicator.
-    It's mainly composed by a specification and a boolean.
+    """Conformity is an entity defining if a data respects a specification. It's a quality
+    indicator. It's mainly composed by a specification and a boolean.
 
     :param str _id: object UUID
     :param bool conformant: conformity with the specification
@@ -40,15 +40,15 @@ class Conformity(object):
         }
     """
 
-    attr_types = {
+    ATTR_TYPES = {
         "conformant": bool,
         "specification": Specification,
         "parent_resource": str,
     }
 
-    attr_crea = {"conformant": "bool", "specification": Specification}
+    ATTR_CREA = {"conformant": "bool", "specification": Specification}
 
-    attr_map = {}
+    ATTR_MAP = {}
 
     def __init__(
         self,
@@ -142,10 +142,10 @@ class Conformity(object):
 
     # -- METHODS -----------------------------------------------------------------------
     def to_dict(self) -> dict:
-        """Returns the model properties as a dict"""
+        """Returns the model properties as a dict."""
         result = {}
 
-        for attr, _ in self.attr_types.items():
+        for attr, _ in self.ATTR_TYPES.items():
             value = getattr(self, attr)
             if isinstance(value, list):
                 result[attr] = list(
@@ -174,12 +174,12 @@ class Conformity(object):
         """Returns the model properties as a dict structured for creation purpose (POST)"""
         result = {}
 
-        for attr, _ in self.attr_crea.items():
+        for attr, _ in self.ATTR_CREA.items():
             # get attribute value
             value = getattr(self, attr)
             # switch attribute name for creation purpose
-            if attr in self.attr_map:
-                attr = self.attr_map.get(attr)
+            if attr in self.ATTR_MAP:
+                attr = self.ATTR_MAP.get(attr)
             if isinstance(value, list):
                 result[attr] = list(
                     map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
@@ -204,7 +204,7 @@ class Conformity(object):
         return result
 
     def to_str(self) -> str:
-        """Returns the string representation of the model"""
+        """Returns the string representation of the model."""
         return pprint.pformat(self.to_dict())
 
     def __repr__(self) -> str:
@@ -212,14 +212,14 @@ class Conformity(object):
         return self.to_str()
 
     def __eq__(self, other) -> bool:
-        """Returns true if both objects are equal"""
+        """Returns true if both objects are equal."""
         if not isinstance(other, Conformity):
             return False
 
         return self.__dict__ == other.__dict__
 
     def __ne__(self, other) -> bool:
-        """Returns true if both objects are not equal"""
+        """Returns true if both objects are not equal."""
         return not self == other
 
 
@@ -227,6 +227,6 @@ class Conformity(object):
 # ##### Stand alone program ########
 # ##################################
 if __name__ == "__main__":
-    """ standalone execution """
+    """standalone execution."""
     fixture = Conformity(conformant=1, specification=Specification())
     print(fixture)
